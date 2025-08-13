@@ -27,6 +27,18 @@ app.put('/myPut', (req, res) => {
   res.send(req.body);
 });
 
+app.put('/updateCustomer/:id', (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+
+  // res.send(`id = ${id} data ${data.id}`);
+
+  res.send({id: id, data: data});
+});
+
+app.delete('/myDelete/:id',(req, res) => {
+  res.send(`id = ${req.params.id}`);
+});
 app.listen(3000, 'localhost', () => {
   console.log('Server is running at http://localhost:3000');
 });
