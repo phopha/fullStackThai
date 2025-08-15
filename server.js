@@ -3,8 +3,11 @@ const app = express();
 const bodyParser = require('body-parser');
 
 const { PrismaClient } = require('@prisma/client');
-
 const prisma = new PrismaClient();
+
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -183,6 +186,134 @@ app.get('/book/notNull', async (req, res) => {
     });
 
     res.send({ results: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/book/isNull', async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        detail: null
+      }
+    });
+
+    res.send({ results: data });
+  }
+  catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/book/between', async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        AND: [{
+          price: {
+            gte: 900 // >= 900
+          }
+        },
+        {
+          price: {
+            lte: 1500 // <= 1500
+          }
+        }]
+      }
+    });
+
+    res.send({ results: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/book/sum', async (req, res) => {
+  try {
+    const data = await prisma.book.aggregate({
+      _sum: {
+        price: true
+      }
+    });
+
+    res.send({ results: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/book/findYearMonthDay', async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        registerDate: new Date('2024-05-09')
+      }
+    });
+
+    res.send({ results: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/book/findYearMonth', async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      where: {
+        registerDate: {
+          gte: new Date('2024-05-01'),
+          lte: new Date('2024-05-31')
+        }
+      }
+    });
+
+    res.send({ results: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+// app.get('/book/findYearMonth', async (req, res) => {
+//   try {
+//     const data = await prisma.book.findMany({
+//       where: {
+//         registerDate: {
+//           gte: new Date('2024-05-01'),
+//           lte: new Date('2024-05-31')
+//         }
+//       }
+//     });
+
+//     res.send({ results: data });
+//   } catch (e) {
+//     res.status(500).send({ error: e.message });
+//   }
+// });
+
+app.get('/user/createToken', (req, res) => {
+  try {
+    const secret = process.env.TOKEN_SECRET;
+    const payload = {
+      id: 100,
+      name: 'kob',
+      level: 'admin'
+    }
+    const token = jwt.sign(payload, secret, { expiresIn: '1d' });
+
+    res.send({ token: token });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/user/verifyToken', (req, res) => {
+  try {
+    const secret = process.env.TOKEN_SECRET;
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwLCJuYW1lIjoia29iIiwibGV2ZWwiOiJhZG1pbiIsImlhdCI6MTc1NTI2NDIyNiwiZXhwIjoxNzU1MzUwNjI2fQ.G41awKjutMxBTFWzZDUXP_AAlukh1aeHnnOYY8kyzJI';
+    const result = jwt.verify(token, secret);
+
+    res.send({ result: result });
   } catch (e) {
     res.status(500).send({ error: e.message });
   }
