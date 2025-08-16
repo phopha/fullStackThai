@@ -9,12 +9,19 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
 
+const fileUpload = require('express-fileupload');
+app.use(fileUpload());
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use('/uploads', express.static('uploads'
+));
 
 const bookController = require('./controllers/BookController');
 app.use('/books', bookController);
+
+const cors = require('cors');
+app.use(cors());
 function checkSingIn(req, res, next) {
   try {
     const secret = process.env.TOKEN_SECRET;
@@ -393,6 +400,126 @@ app.get('/multiModel', async (req, res) => {
   }
 });
 
+app.post('/book/testUplaod', (req, res) => {
+  try {
+    const myFile = req.files.myFile; // Assuming the file input name is 'myFile'
+
+    myFile.mv(`./uploads/${myFile.name}`, (err) => {
+      if (err) {
+        res.status(500).send({ error: err });
+      }
+      res.send({ message: 'success' });
+    });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/readFile', (req, res) => {
+  try {
+    const fs = require('fs');
+    fs.readFile('test.txt', (err, data) => {
+      if (err) {
+        throw err;
+      }
+
+      res.send(data);;
+    });
+  } catch (e) {
+
+  }
+});
+
+app.get('/writeFile', (req, res) => {
+  try {
+    const fs = require('fs');
+    fs.writeFile('test.txt', 'hello by kob', (err) => {
+      if (err) {
+        throw err;
+      }
+
+    });
+
+    res.send({ message: 'success' });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/removeFile', (req, res) => {
+  try {
+    const fs = require('fs');
+    fs.unlinkSync('test.txt');
+    res.send({ message: 'success' });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+
+app.get('/fileExissts', (req, res) => {
+  try {
+    const fs = require('fs');
+    const found = fs.existsSync('package.json');
+
+    res.send({ found: found });
+  }
+  catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/createPdf', (req, res) => {
+  try {
+    const PDFDocument = require('pdfkit');
+    const fs = require('fs');
+    const doc = new PDFDocument();
+
+    doc.pipe(fs.createWriteStream('output.pdf'));
+    doc
+      .font('./Kanit/Kanit-Medium.ttf')
+      .fontSize(25)
+      .text('สวัสดี ทดสอบภาษาไทย', 100, 100);
+
+    doc
+      .addPage()
+      .fontSize(25)
+      .text('Here is some vector graphics...', 100, 100);
+
+    doc.end();
+    res.send({ message: 'success' });
+
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/readExcel', async (req, res) => {
+  try {
+    const excel = require('exceljs');
+    const wb = new excel.Workbook();
+    await wb.xlsx.readFile('productExport.xlsx');
+    const ws = wb.getWorksheet(1);
+
+    for (let i = 1; i < ws.rowCount; i++) {
+      const row = ws.getRow(i);
+      const barcode = row.getCell(1).value;
+      const name = row.getCell(2).value;
+      const cost = row.getCell(3).value;
+      const sale = row.getCell(4).value;
+      const send = row.getCell(5).value;
+      const unit = row.getCell(6).value;
+      const point = row.getCell(7).value;
+      const productTypeId = row.getCell(8).value;
+
+      console.log(barcode, name, cost, sale, send, unit, point, productTypeId);
+    }
+
+    res.send({ message: 'success' });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
 app.listen(3000, 'localhost', () => {
   console.log('Server is running at http://localhost:3000');
 });
