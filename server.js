@@ -12,6 +12,34 @@ dotenv.config();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+const bookController = require('./controllers/BookController');
+app.use('/books', bookController);
+function checkSingIn(req, res, next) {
+  try {
+    const secret = process.env.TOKEN_SECRET;
+    const token = req.headers['authorization'];
+    console.log(req.headers);
+    const result = jwt.verify(token, secret);
+    console.log(result);
+    if (result != undefined) {
+      next();
+    }
+
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+}
+
+app.get('/user/info', checkSingIn, (req, res, next) => {
+  try {
+    res.send('hello back office user info');
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('hello world');
 });
@@ -299,7 +327,7 @@ app.get('/user/createToken', (req, res) => {
       name: 'kob',
       level: 'admin'
     }
-    const token = jwt.sign(payload, secret, { expiresIn: '1d' });
+    const token = jwt.sign(payload, secret, { expiresIn: '1y' });
 
     res.send({ token: token });
   } catch (e) {
@@ -310,10 +338,56 @@ app.get('/user/createToken', (req, res) => {
 app.get('/user/verifyToken', (req, res) => {
   try {
     const secret = process.env.TOKEN_SECRET;
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwLCJuYW1lIjoia29iIiwibGV2ZWwiOiJhZG1pbiIsImlhdCI6MTc1NTI2NDIyNiwiZXhwIjoxNzU1MzUwNjI2fQ.G41awKjutMxBTFWzZDUXP_AAlukh1aeHnnOYY8kyzJI';
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwLCJuYW1lIjoia29iIiwibGV2ZWwiOiJhZG1pbiIsImlhdCI6MTc1NTMyMTE0MSwiZXhwIjoxNzg2ODc4NzQxfQ.CcK1HDENtzk9gKv323WEuo-a4k9-wBnhMSOBYd0sPXs';
     const result = jwt.verify(token, secret);
 
     res.send({ result: result });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/oneToOne', async (req, res) => {
+  try {
+    const data = await prisma.orderDetail.findMany({
+      include: {
+        Book: true
+      }
+    });
+
+    res.send({ results: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+})
+
+app.get('/oneToMany', async (req, res) => {
+  try {
+    const data = await prisma.book.findMany({
+      include: {
+        OrderDetail: true
+      }
+    });
+
+    res.send({ results: data });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+app.get('/multiModel', async (req, res) => {
+  try {
+    const data = await prisma.customer.findMany({
+      include: {
+        Order: {
+          include: {
+            OrderDetail: true
+          }
+        }
+      }
+    });
+
+    res.send({ results: data });
   } catch (e) {
     res.status(500).send({ error: e.message });
   }

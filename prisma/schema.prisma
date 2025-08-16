@@ -15,10 +15,37 @@ datasource db {
 }
 
 model Book {
-  id           Int       @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   isbn         String
   name         String
   price        Int
   detail       String?
   registerDate DateTime?
+  OrderDetail  OrderDetail[]
+}
+
+model Customer {
+  id      Int     @id @default(autoincrement())
+  name    String
+  phone   String
+  address String
+  Order   Order[]
+}
+
+model Order {
+  id         Int       @id @default(autoincrement())
+  orderDate  DateTime
+  payDay     DateTime?
+  customerId Int
+
+  Customer    Customer      @relation(fields: [customerId], references: [id])
+  OrderDetail OrderDetail[]
+}
+
+model OrderDetail {
+  id      Int   @id @default(autoincrement())
+  orderId Int
+  bookId  Int
+  Order   Order @relation(fields: [orderId], references: [id])
+  Book    Book  @relation(fields: [bookId], references: [id])
 }
