@@ -113,9 +113,9 @@ app.put('/book/update/:id', async (req, res) => {
   try {
     await prisma.book.update({
       data: {
-        isbn: '10022',
+        isbn: '1004',
         name: 'test update',
-        price: 900
+        price: 800
       },
       where: {
         id: parseInt(req.params.id)
@@ -400,9 +400,23 @@ app.get('/multiModel', async (req, res) => {
   }
 });
 
-app.post('/book/testUplaod', (req, res) => {
+app.post('/book/testUpload', (req, res) => {
   try {
-    const myFile = req.files.myFile; // Assuming the file input name is 'myFile'
+    // ตรวจสอบก่อนว่ามีไฟล์หรือไม่
+    if (!req.files || !req.files.myFile) {
+      return res.status(400).send({
+        error: 'No file uploaded or file field missing'
+      });
+    }
+
+    const myFile = req.files.myFile;
+
+    // ตรวจสอบว่าไฟล์ไม่เป็น null
+    if (myFile == null) {
+      return res.status(400).send({
+        error: 'File is null'
+      });
+    }
 
     myFile.mv(`./uploads/${myFile.name}`, (err) => {
       if (err) {
@@ -423,7 +437,7 @@ app.get('/readFile', (req, res) => {
         throw err;
       }
 
-      res.send(data);;
+      res.send(data);
     });
   } catch (e) {
 
@@ -520,6 +534,22 @@ app.get('/readExcel', async (req, res) => {
     res.status(500).send({ error: e.message });
   }
 });
+
+app.delete('/orderDetail/remove/:id', async (req, res) => {
+  try {
+    await prisma.orderDetail.delete({
+      where: {
+        id: parseInt(req.params.id)
+      }
+    })
+
+    res.send({ message: 'success' });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+})
+
+
 app.listen(3001, 'localhost', () => {
   console.log('Server is running at http://localhost:3001');
 });
