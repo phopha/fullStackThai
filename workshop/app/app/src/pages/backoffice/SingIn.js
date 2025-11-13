@@ -47,7 +47,7 @@ function SingIn() {
 
             <div>
               <div class="input-group mb-3">
-                <input type="email" class="form-control" placeholder="Email" onChage={e => setUser({ ...user, user: e.target.value })} />
+                <input type="email" class="form-control" placeholder="username" onChange={e => setUser({ ...user, user: e.target.value })} />
                 <div class="input-group-append">
                   <div class="input-group-text">
                     <span class="fas fa-envelope"></span>

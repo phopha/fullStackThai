@@ -1,7 +1,11 @@
+import BackOffice from '../../components/BackOffice';
+
 function Home() {
   return (
     <>
-      <div>Phopha</div>
+      <BackOffice>
+
+      </BackOffice>
     </>
   )
 }
